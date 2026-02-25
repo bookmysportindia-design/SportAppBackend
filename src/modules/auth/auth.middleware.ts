@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import type { AuthJwtPayload } from "../../types/express";
+import { env } from "../../config/env";
 
 export const authMiddleware = (
   req: Request,
@@ -20,7 +21,7 @@ export const authMiddleware = (
     return;
   }
 
-  const secret = process.env.JWT_SECRET;
+  const secret = env.JWT_SECRET;
   if (!secret) {
     throw new Error("JWT_SECRET not configured");
   }
