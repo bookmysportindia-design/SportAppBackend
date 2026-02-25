@@ -1,11 +1,8 @@
-export interface SendOtpDto {
-  phone: string;
-}
+import type { z } from "zod";
+import { sendOtpSchema, verifyOtpSchema } from "./auth.schema";
 
-export interface VerifyOtpDto {
-  phone: string;
-  otp: string;
-}
+export type SendOtpDto = z.infer<typeof sendOtpSchema>;
+export type VerifyOtpDto = z.infer<typeof verifyOtpSchema>;
 
 export interface AuthResponse {
   token: string;

@@ -3,16 +3,16 @@ import jwt from "jsonwebtoken";
 import { SendOtpDto, VerifyOtpDto, AuthResponse } from "./auth.types";
 import { prisma } from "../../lib/prisma";
 
-const OTP_EXPIRY_MS = 5 * 60 * 1000;
+const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
 export class AuthService {
   static generateOtp(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    return Math.floor(1000 + Math.random() * 9000).toString();
   }
 
   static async sendOtp(data: SendOtpDto): Promise<void> {
     const otp = this.generateOtp();
-    const otpHash = await bcrypt.hash(otp, 10);
+    const otpHash = await bcrypt.hash(otp, 7);
 
     await prisma.otp.create({
       data: {
@@ -23,6 +23,7 @@ export class AuthService {
     });
 
     // TODO: Call STPL API here with axios
+
     console.log(`OTP for ${data.phone}: ${otp}`);
   }
 
