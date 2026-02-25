@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../src/prisma/generated/prisma"
+  output   = "../prisma/generated/prisma"
 }
 
 datasource db {
@@ -25,6 +25,7 @@ model User {
   updatedAt       DateTime @updatedAt
 
   venues          Venue[]  @relation("OwnerVenues")
+  bookings        Booking[]
 }
 
 enum Role {
@@ -52,6 +53,8 @@ model Venue {
   ownerId       String
   owner         User     @relation("OwnerVenues", fields: [ownerId], references: [id])
 
+  bookings      Booking[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -65,4 +68,59 @@ model Otp {
   createdAt   DateTime @default(now())
 
   @@index([phone])
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PAID
+  REFUNDED
+}
+
+enum Slot {
+  MORNING
+  AFTERNOON
+  EVENING
+}
+
+enum Sport {
+  CRICKET
+  FOOTBALL
+}
+
+enum GameFormat {
+  CRICKET_4V4
+  CRICKET_5V5
+  FOOTBALL_5V5
+  FOOTBALL_7V7
+}
+
+model Booking {
+  id              String         @id @default(uuid())
+  referenceNumber String         @unique
+  bookingDate     DateTime
+  slot            Slot
+  sport           Sport
+  gameFormat      GameFormat
+
+  totalAmount     Int
+  paymentStatus   PaymentStatus  @default(PAID)
+  status          BookingStatus  @default(CONFIRMED)
+
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+
+  venueId         String
+  venue           Venue          @relation(fields: [venueId], references: [id])
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  cancelledAt     DateTime?
+
+  @@index([userId])
+  @@index([venueId])
+  @@index([bookingDate])
 }
