@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { SendOtpDto, VerifyOtpDto, AuthResponse } from "./auth.types";
 import { prisma } from "../../lib/prisma";
+import axios from "axios";
+import { env } from "../../config/env";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
@@ -22,9 +24,23 @@ export class AuthService {
       },
     });
 
-    // TODO: Call STPL API here with axios
+    // TODO: Call a2z otp sms sending API here with axios
+    const message = `WFO Sports: Dear John, your OTP for login is ${otp}. It is valid for 10 minutes. Do not share it with anyone.`;
 
-    console.log(`OTP for ${data.phone}: ${otp}`);
+    // http: console.log(`OTP for ${data.phone}: ${otp}`);
+    const response = await axios.get("http://sms.a2zsms.in/api.php", {
+      params: {
+        username: env.A2Z_USERNAME,
+        password: env.A2Z_PASSWORD,
+        to: data.phone,
+        from: env.A2Z_FROM,
+        message,
+        PEID: env.A2Z_PEID,
+        templateid: env.A2Z_TEMPLATE_ID,
+      },
+    });
+
+    console.log("SMS API Response:", response.data);
   }
 
   static async verifyOtp(data: VerifyOtpDto): Promise<AuthResponse> {
