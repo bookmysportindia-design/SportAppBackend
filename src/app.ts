@@ -2,8 +2,9 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 
-import authRoutes from "./modules/auth/auth.routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import authRoutes from "./modules/auth/auth.routes";
+import userRoutes from "./modules/users/user.routes";
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 app.use(errorMiddleware);
 
