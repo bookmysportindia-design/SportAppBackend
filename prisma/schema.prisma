@@ -81,6 +81,7 @@ enum PaymentStatus {
 }
 
 enum Slot {
+  EARLY
   MORNING
   AFTERNOON
   EVENING
@@ -91,20 +92,13 @@ enum Sport {
   FOOTBALL
 }
 
-enum GameFormat {
-  CRICKET_4V4
-  CRICKET_5V5
-  FOOTBALL_5V5
-  FOOTBALL_7V7
-}
-
 model Booking {
   id              String         @id @default(uuid())
   referenceNumber String         @unique
   bookingDate     DateTime
   slot            Slot
   sport           Sport
-  gameFormat      GameFormat
+  playersPerTeam  Int
 
   totalAmount     Int
   paymentStatus   PaymentStatus  @default(PAID)
