@@ -5,6 +5,8 @@ import morgan from "morgan";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import authRoutes from "./modules/auth/auth.routes";
 import userRoutes from "./modules/users/user.routes";
+import bookingRoutes from "./modules/bookings/booking.routes";
+import venueRoutes from "./modules/venues/venue.routes";
 
 const app = express();
 
@@ -17,7 +19,9 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/venues", venueRoutes);
 
 app.use(errorMiddleware);
 
