@@ -28,4 +28,18 @@ export class AuthController {
       next(error);
     }
   }
+
+  static async getUserInfo(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      const userInfo = await AuthService.getUserInfo(userId);
+      res.status(200).json(userInfo);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

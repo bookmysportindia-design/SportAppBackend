@@ -71,6 +71,7 @@ model Otp {
 }
 
 enum BookingStatus {
+  PENDING
   CONFIRMED
   CANCELLED
 }
@@ -81,10 +82,12 @@ enum PaymentStatus {
 }
 
 enum Slot {
-  EARLY
-  MORNING
-  AFTERNOON
-  EVENING
+  PRE_DAWN
+  SLOT1
+  SLOT2
+  SLOT3
+  DNSLOT
+  MIDNIGHT
 }
 
 enum Sport {
@@ -100,7 +103,13 @@ model Booking {
   sport           Sport
   playersPerTeam  Int
 
+  baseAmount      Int            // original price
+  discountAmount  Int            @default(0)
   totalAmount     Int
+
+  appliedOfferCode String?       // "PLAY20"
+  appliedOfferTitle String?      // "20% off"
+
   paymentStatus   PaymentStatus  @default(PAID)
   status          BookingStatus  @default(CONFIRMED)
 
