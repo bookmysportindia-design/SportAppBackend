@@ -1,10 +1,17 @@
 import { prisma } from "../../lib/prisma";
-import { BookingStatus, PaymentStatus } from "../../../prisma/generated/prisma/client";
+import {
+  BookingStatus,
+  PaymentStatus,
+  Slot,
+} from "../../../prisma/generated/prisma/client";
+import { stat } from "node:fs";
 
 interface CreateBookingDto {
   venueId: string;
   bookingDate: string;
-  slot: "MORNING" | "AFTERNOON" | "EVENING";
+  slot: Slot;
+  baseAmount: number;
+  offerCode?: string;
   sport: "CRICKET" | "FOOTBALL";
   playersPerTeam: number;
 }
@@ -15,6 +22,14 @@ export class BookingService {
   }
 
   static async create(userId: string, data: CreateBookingDto) {
+    const baseAmount = 1020;
+    let discountAmount = 0;
+
+    if (data.offerCode === "PLAY20") {
+      discountAmount = baseAmount * 0.2;
+    }
+
+    const totalAmount = baseAmount - discountAmount;
     const venue = await prisma.venue.findUnique({
       where: { id: data.venueId },
     });
@@ -27,11 +42,13 @@ export class BookingService {
       data: {
         referenceNumber: this.generateReference(),
         bookingDate: new Date(data.bookingDate),
-        slot: data.slot,
+        slot: Slot.SLOT1,
         sport: data.sport,
         playersPerTeam: data.playersPerTeam,
-        totalAmount: 1000, // dummy value
-        status: BookingStatus.CONFIRMED,
+        baseAmount: baseAmount,
+        discountAmount: discountAmount,
+        totalAmount: totalAmount,
+        status: BookingStatus.PENDING,
         paymentStatus: PaymentStatus.PAID,
         userId,
         venueId: data.venueId,
@@ -81,5 +98,43 @@ export class BookingService {
         cancelledAt: new Date(),
       },
     });
+  }
+
+  static async getBusinessBookingRequests(userId: string) {
+    const venues = await prisma.venue.findMany({
+      where: { ownerId: userId },
+    });
+
+    const bookingRequests = await prisma.booking.findMany({
+      where: {
+        venueId: { in: venues.map((v) => v.id) },
+        status: BookingStatus.PENDING,
+      },
+      include: {
+        venue: true,
+        user: true,
+      },
+    });
+    return bookingRequests;
+  }
+
+  static async acceptBookingRequest(bookingId: string) {
+    try {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+      });
+
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: BookingStatus.CONFIRMED,
+        },
+      });
+
+      return booking;
+    } catch (error) {
+      console.error("Error accepting booking request:", error);
+      throw new Error("Failed to accept booking request");
+    }
   }
 }

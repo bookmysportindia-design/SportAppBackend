@@ -15,6 +15,10 @@ router.post(
 
 router.get("/", authMiddleware, BookingController.getUserBookings);
 
+router.get("/requests", authMiddleware, BookingController.getBookingRequests);
+
+router.post("/requests/accept", authMiddleware, BookingController.acceptBookingRequest);
+
 router.patch("/cancel", authMiddleware, BookingController.cancel);
 
 export default router;

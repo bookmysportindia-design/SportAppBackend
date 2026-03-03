@@ -33,4 +33,10 @@ export class VenueService {
 
     return venues;
   }
+
+  static async getMyVenues(id: string) {
+    return prisma.venue.findMany({
+      where: { ownerId: id },
+    });
+  }
 }

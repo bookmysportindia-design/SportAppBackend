@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { BookingService } from "./booking.service";
+import { tr } from "zod/locales";
 
 export class BookingController {
   static async create(
@@ -46,6 +47,25 @@ export class BookingController {
     }
   }
 
+  static async getBookingRequests(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      const bookingRequests =
+        await BookingService.getBusinessBookingRequests(userId);
+      res.status(200).json(bookingRequests);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async cancel(
     req: Request,
     res: Response,
@@ -61,6 +81,25 @@ export class BookingController {
       const { bookingId } = req.body;
 
       const booking = await BookingService.cancel(userId, bookingId);
+      res.status(200).json(booking);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async acceptBookingRequest(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      const { bookingId } = req.body;
+      const booking = await BookingService.acceptBookingRequest(bookingId);
       res.status(200).json(booking);
     } catch (error) {
       next(error);
