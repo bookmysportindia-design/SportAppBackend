@@ -102,7 +102,7 @@ export class BookingService {
 
   static async getBusinessBookingRequests(userId: string) {
     const venues = await prisma.venue.findMany({
-      where: { ownerId: userId },
+      // where: { ownerId: userId },
     });
 
     const bookingRequests = await prisma.booking.findMany({
