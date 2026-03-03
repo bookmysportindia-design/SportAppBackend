@@ -40,7 +40,7 @@ export class AuthService {
       },
     });
 
-    // console.log("SMS API Response:", response.data);
+    console.log("SMS API Response:", response.data);
   }
 
   static async verifyOtp(data: VerifyOtpDto): Promise<AuthResponse> {
