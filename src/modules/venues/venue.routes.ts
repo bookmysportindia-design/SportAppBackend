@@ -2,16 +2,11 @@ import { Router } from "express";
 import { VenueController } from "./venue.controller";
 import { authMiddleware } from "../auth/auth.middleware";
 import { validate } from "../../middlewares/validate.middleware";
-import { createVenueSchema, listVenuesQuerySchema } from "./venue.schema";
+import { createVenueSchema } from "./venue.schema";
 
 const router = Router();
 
-router.get(
-  "/",
-  authMiddleware,
-  validate(listVenuesQuerySchema),
-  VenueController.list,
-);
+router.get("/", authMiddleware, VenueController.list);
 
 router.post(
   "/",
