@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma";
+import { createVenueSchema } from "./venue.schema";
 
 interface ListVenueParams {
   city?: string;
@@ -37,6 +38,30 @@ export class VenueService {
   static async getMyVenues(id: string) {
     return prisma.venue.findMany({
       where: { ownerId: id },
+    });
+  }
+
+  static async create(userId: string, data: any) {
+    return prisma.venue.create({
+      data: {
+        name: data.venueName,
+        contactNumber: data.venueHandlerContactNumber,
+        // googleMapsLink: data.googleMapsLink,
+        // locality: data.locality,
+        city: data.city,
+        address: `${data.locality}, ${data.city}, ${data.pincode}`,
+        longitude: data.logitudinalValue,
+        amenities: data.amenities,
+        openingTime: data.opensAt,
+        closingTime: data.closesAt,
+        sportTypes: data.sportTypes,
+        // equipmentAvailable: data.equipmentAvailable,
+        // pincode: data.pincode,
+        workingDays: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+        // pricesWeekdays: data.prices_weekdays,
+        // pricesWeekends: data.prices_weekends,
+        ownerId: userId,
+      },
     });
   }
 }

@@ -35,6 +35,14 @@ enum Role {
   TOURNAMENT_OWNER
 }
 
+enum Amenity {
+  PARKING 
+  TOILETS
+  CHANGING_ROOMS
+  FIRST_AID
+  WATER_FACILITY
+}
+
 model Venue {
   id            String   @id @default(uuid())
   name          String
@@ -47,7 +55,7 @@ model Venue {
   closingTime   String
   workingDays   String[]
   sportTypes    String[]
-  amenities     String[]
+  amenities     Amenity[]
   photos        String[]
 
   ownerId       String

@@ -40,4 +40,19 @@ export class VenueController {
       next(error);
     }
   }
+
+  static async create(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId;
+      console.log("User ID from request:", userId);
+      if (!userId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      const venue = await VenueService.create(userId, req.body);
+      res.status(201).json(venue);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
