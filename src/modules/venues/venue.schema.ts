@@ -33,9 +33,10 @@ export const createVenueSchema = z.object({
   closesAt: z.string().regex(/^([01]\d|2[0-3]):?([0-5]\d)$/), // HH:mm format
   sportTypes: z.array(z.enum(["CRICKET", "FOOTBALL"])).min(1),
   equipmentAvailable: z.array(z.string()).optional(),
-  workingDays: z
-    .array(z.enum(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]))
-    .min(1),
+  workingDays: z.array(z.string()).optional(),
+  // workingDays: z
+  //   .array(z.enum(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]))
+  //   .min(1),
   slots_available: z
     .array(
       z.enum(["PRE_DAWN", "SLOT1", "SLOT2", "SLOT3", "DNSLOT", "MIDNIGHT"]),
