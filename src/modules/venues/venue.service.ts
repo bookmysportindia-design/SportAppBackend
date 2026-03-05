@@ -57,7 +57,7 @@ export class VenueService {
         sportTypes: data.sportTypes,
         // equipmentAvailable: data.equipmentAvailable,
         // pincode: data.pincode,
-        workingDays: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+        workingDays: data.workingDays,
         // pricesWeekdays: data.prices_weekdays,
         // pricesWeekends: data.prices_weekends,
         ownerId: userId,
