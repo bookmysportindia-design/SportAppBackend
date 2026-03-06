@@ -17,6 +17,8 @@ export class PaymentService {
       return PaymentService.accessToken;
     }
 
+    console.log("Fetching new PhonePe access token...");
+
     // 2. Otherwise, fetch a new one
     const tokenUrl =
       env.NODE_ENV === "production"
