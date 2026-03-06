@@ -29,7 +29,11 @@ export class AuthController {
     }
   }
 
-  static async getUserInfo(req: Request, res: Response, next: NextFunction) {
+  static async getUserInfo(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user?.userId;
       if (!userId) {

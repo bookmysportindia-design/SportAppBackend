@@ -8,9 +8,7 @@ export class VenueController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      console.log("User:", req);
       const userId = req.user?.userId;
-      console.log("User ID from request:", userId);
       if (!userId) {
         res.status(401).json({ message: "Unauthorized" });
         return;

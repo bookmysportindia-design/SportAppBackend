@@ -7,6 +7,7 @@ import authRoutes from "./modules/auth/auth.routes";
 import userRoutes from "./modules/users/user.routes";
 import bookingRoutes from "./modules/bookings/booking.routes";
 import venueRoutes from "./modules/venues/venue.routes";
+import paymentRoutes from "./modules/payment/payment.routes";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/venues", venueRoutes);
+app.use("/api/payments", paymentRoutes);
 
 app.use(errorMiddleware);
 

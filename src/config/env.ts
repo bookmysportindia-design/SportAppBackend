@@ -29,6 +29,14 @@ const envSchema = z.object({
   A2Z_PEID: z.string().min(1, "A2Z_PEID is required"),
 
   A2Z_TEMPLATE_ID: z.string().min(1, "A2Z_TEMPLATE_ID is required"),
+
+  PHONEPE_CLIENTID: z.string().min(1, "PHONEPE_CLIENTID is required"),
+
+  PHONEPE_CLIENT_VERSION: z
+    .string()
+    .min(1, "PHONEPE_CLIENT_VERSION is required"),
+
+  PHONEPE_CLIENT_SECRET: z.string().min(1, "PHONEPE_CLIENT_SECRET is required")
 });
 
 const parsed = envSchema.safeParse(process.env);
