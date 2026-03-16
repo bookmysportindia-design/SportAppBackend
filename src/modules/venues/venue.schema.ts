@@ -74,3 +74,8 @@ export const createVenueSchema = z.object({
   bankAccountNumber: z.string().min(9).max(18),
   permits: z.array(z.url()).optional(),
 });
+
+
+export const favoriteVenueSchema = z.object({
+  venueId: z.string().min(1),
+});

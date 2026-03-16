@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { SendOtpDto, VerifyOtpDto, AuthResponse } from "./auth.types";
-import { prisma } from "../../lib/prisma";
+import { SendOtpDto, VerifyOtpDto, AuthResponse } from "./auth.types.js";
+import { prisma } from "../../lib/prisma.js";
 import axios from "axios";
-import { env } from "../../config/env";
+import { env } from "../../config/env.js";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
@@ -27,7 +27,7 @@ export class AuthService {
     console.log(`OTP for ${data.phone}: ${otp}`);
 
     // Call a2z otp sms sending API here with axios
-    const message = `WFO Sports: Dear John, your OTP for login is ${otp}. It is valid for 10 minutes. Do not share it with anyone.`;
+    const message = `WFO Sports: Dear User, your OTP for login is ${otp}. It is valid for 10 minutes. Do not share it with anyone.`;
     const response = await axios.get("http://sms.a2zsms.in/api.php", {
       params: {
         username: env.A2Z_USERNAME,

@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { BookingService } from "./booking.service";
+import { BookingService } from "./booking.service.js";
 import { tr } from "zod/locales";
 
 export class BookingController {

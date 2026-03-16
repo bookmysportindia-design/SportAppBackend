@@ -2,12 +2,13 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 
-import { errorMiddleware } from "./middlewares/error.middleware";
-import authRoutes from "./modules/auth/auth.routes";
-import userRoutes from "./modules/users/user.routes";
-import bookingRoutes from "./modules/bookings/booking.routes";
-import venueRoutes from "./modules/venues/venue.routes";
-import paymentRoutes from "./modules/payment/payment.routes";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
+import authRoutes from "./modules/auth/auth.routes.js";
+import userRoutes from "./modules/users/user.routes.js";
+import bookingRoutes from "./modules/bookings/booking.routes.js";
+import venueRoutes from "./modules/venues/venue.routes.js";
+import paymentRoutes from "./modules/payment/payment.routes.js";
+import notificationRoutes from "./modules/notifications/notification_routes.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/venues", venueRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(errorMiddleware);
 
