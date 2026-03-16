@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { ca } from "zod/locales";
-import { PaymentService } from "./payment.service";
-import { createOrderDto } from "./payment.types";
+import { PaymentService } from "./payment.service.js";
+import { createOrderDto, getPaymentStatusDto } from "./payment.types.js";
 
 export class PaymentController {
   static async initiatePayment(
@@ -9,9 +8,25 @@ export class PaymentController {
     res: Response,
     next: NextFunction,
   ): Promise<void> {
-    const orderTokenResponse = await PaymentService.createPhonePeOrderToken(req.body);
+    const orderTokenResponse = await PaymentService.createPhonePeOrderToken(
+      req.body,
+    );
     try {
       res.json(orderTokenResponse);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getPaymentStatus(
+    req: Request<{}, {}, getPaymentStatusDto>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { orderId } = req.body;
+      const paymentStatus = await PaymentService.getPaymentStatus(orderId);
+      res.json({ orderId, status: paymentStatus });
     } catch (error) {
       next(error);
     }

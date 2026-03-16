@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     // File Layout
-    "rootDir": "./src",
+    // "rootDir": "./src",
     "outDir": "./dist",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "target": "ES2023",
     "esModuleInterop": true,
     "lib": ["esnext"],
@@ -23,5 +23,8 @@
     "noUncheckedSideEffectImports": true,
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", "dist", "prisma.config.ts", "prisma"]
+  "paths": {
+    "@generated/prisma": ["./prisma/generated/prisma/client.d.ts"]
+  },
+  "exclude": ["node_modules", "dist"]
 }

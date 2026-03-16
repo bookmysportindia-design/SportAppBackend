@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import type { AuthJwtPayload } from "../../types/express";
-import { env } from "../../config/env";
+import type { AuthJwtPayload } from "../../types/express.js";
+import { env } from "../../config/env.js";
 
 export const authMiddleware = (
   req: Request,

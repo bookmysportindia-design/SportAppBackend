@@ -1,6 +1,6 @@
 import axios from "axios";
-import { env } from "../../config/env";
-import { createOrderDto, OrderTokenResponse } from "./payment.types";
+import { env } from "../../config/env.js";
+import { createOrderDto, OrderTokenResponse } from "./payment.types.js";
 
 export class PaymentService {
   private static accessToken: string | null = null;
@@ -116,6 +116,30 @@ export class PaymentService {
     } catch (error) {
       console.error("PhonePe Order Token Error:", error);
       throw new Error("Failed to create PhonePe order token");
+    }
+  }
+
+  static async getPaymentStatus(orderId: string) {
+    const accessToken = await PaymentService.getPhonePeAccessToken();
+    console.log(accessToken);
+    console.log(orderId);
+    const statusUrl =
+      env.NODE_ENV === "production"
+        ? `https://api.phonepe.com/apis/pg/checkout/v2/order/${orderId}/status?details=false'`
+        : `https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/${orderId}/status?details=false'`;
+
+    try {
+      const response = await axios.get(statusUrl, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `O-Bearer ${accessToken}`,
+        },
+      });
+      console.log("PhonePe Payment Status Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("PhonePe Payment Status Error:", error);
+      throw new Error("Failed to get payment status");
     }
   }
 }

@@ -1,5 +1,5 @@
-import { prisma } from "../../lib/prisma";
-import { createVenueSchema } from "./venue.schema";
+import { prisma } from "../../lib/prisma.js";
+import { createVenueSchema } from "./venue.schema.js";
 
 interface ListVenueParams {
   city?: string;
@@ -27,6 +27,9 @@ export class VenueService {
       },
       orderBy: {
         [params.sort || "createdAt"]: "desc",
+      },
+      include: {
+        favoritedBy: true,
       },
       skip,
       take: limit,
@@ -63,6 +66,31 @@ export class VenueService {
         // pricesWeekends: data.prices_weekends,
         ownerId: userId,
       },
+    });
+  }
+
+  static async toggleFavorite(userId: string, venueId: string) {
+    const existing = await prisma.favorite.findUnique({
+      where: {
+        userId_venueId: { userId, venueId },
+      },
+    });
+
+    if (existing) {
+      return await prisma.favorite.delete({
+        where: { id: existing.id },
+      });
+    } else {
+      return await prisma.favorite.create({
+        data: { userId, venueId },
+      });
+    }
+  }
+
+  static async getFavoriteVenues(userId: string) {
+    return prisma.favorite.findMany({
+      where: { userId },
+      include: { venue: { include: { favoritedBy: true } } },
     });
   }
 }

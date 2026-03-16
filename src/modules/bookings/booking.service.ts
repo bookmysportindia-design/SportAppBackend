@@ -1,10 +1,9 @@
-import { prisma } from "../../lib/prisma";
+import { prisma } from "../../lib/prisma.js";
 import {
   BookingStatus,
   PaymentStatus,
   Slot,
-} from "../../../prisma/generated/prisma/client";
-import { stat } from "node:fs";
+} from "../../../prisma/generated/prisma/client.js";
 
 interface CreateBookingDto {
   venueId: string;

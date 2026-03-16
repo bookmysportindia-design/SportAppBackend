@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Slot } from "../../../prisma/generated/prisma/enums";
+import { Slot } from "../../../prisma/generated/prisma/enums.js";
 
 export const createBookingSchema = z.object({
   venueId: z.string().uuid(),

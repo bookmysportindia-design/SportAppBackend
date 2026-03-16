@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { AuthService } from "./auth.service";
-import { SendOtpDto, VerifyOtpDto } from "./auth.types";
+import { AuthService } from "./auth.service.js";
+import { SendOtpDto, VerifyOtpDto } from "./auth.types.js";
 
 export class AuthController {
   static async sendOtp(
