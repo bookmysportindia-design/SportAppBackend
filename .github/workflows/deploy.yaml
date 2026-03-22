@@ -29,10 +29,10 @@ jobs:
             git pull origin main
 
             # Install dependencies and restart the app
-            npm install --production
+            npm install
 
             # Build the app (if necessary)
             npm run build
 
             # Using PM2 to manage the process (recommended)
-            pm2 restart all || pm2 start npm --name "my-app" -- start
+            pm2 restart all || pm2 start npm --name "backend" -- start
