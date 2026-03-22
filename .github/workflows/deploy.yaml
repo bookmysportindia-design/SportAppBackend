@@ -1,0 +1,35 @@
+name: Backend Deployment
+
+on:
+  push:
+    branches:
+      - main  # Trigger deployment on push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Linode via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LINODE_IP }}
+          username: ${{ secrets.LINODE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Navigate to your app directory (change this to your path)
+            cd /SportAppBackend || git clone https://github.com/bookmysportindia-design/SportAppBackend.git /SportAppBackend
+            cd /SportAppBackend
+            
+            # Pull the latest changes
+            git pull origin main
+            
+            # Install dependencies and restart the app
+            npm install --production
+            
+            # Using PM2 to manage the process (recommended)
+            pm2 restart all || pm2 start npm --name "my-app" -- start
