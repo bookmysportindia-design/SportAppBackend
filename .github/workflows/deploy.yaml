@@ -18,12 +18,11 @@ jobs:
         with:
           host: ${{ secrets.LINODE_IP }}
           username: ${{ secrets.LINODE_USER }}
-          password: ${{ secrets.LINODE_PASSWORD }}
-          # key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
             # Navigate to your app directory (change this to your path)
-            cd /SportAppBackend || git clone https://github.com/bookmysportindia-design/SportAppBackend.git /SportAppBackend
+            cd /SportAppBackend || git clone https://github.com/${{ github.repository }}.git /SportAppBackend
             cd /SportAppBackend
 
             # Pull the latest changes
