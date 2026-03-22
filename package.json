@@ -6,7 +6,7 @@
   "scripts": {
     "postinstall": "npm run prisma:generate",
     "build": "tsc",
-    "start": "npm run build && node dist/src/server.js",
+    "start": "node dist/src/server.js",
     "dev": "npx tsx watch src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

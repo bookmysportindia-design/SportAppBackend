@@ -31,5 +31,8 @@ jobs:
             # Install dependencies and restart the app
             npm install --production
 
+            # Build the app (if necessary)
+            npm run build
+
             # Using PM2 to manage the process (recommended)
             pm2 restart all || pm2 start npm --name "my-app" -- start
