@@ -13,28 +13,18 @@ datasource db {
   provider = "postgresql"
 }
 
-
-model User {
-  id              String   @id @default(uuid())
-  phone           String   @unique
-  name            String?
-  email           String?  @unique
-  profilePicture  String?
-  roles           Role[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  venues          Venue[]  @relation("OwnerVenues")
-  bookings        Booking[] 
-  notifications   Notification[]
-  favorites       Favorite[]
-}
-
 enum Role {
   GROUND_OWNER
+  GROUND_MANAGER
+
   CAPTAIN
   PLAYER
+
   TOURNAMENT_OWNER
+  TOURNAMENT_ADMIN
+
+  ACADEMY_OWNER
+  TEAM_OWNER
 }
 
 enum Amenity {
@@ -43,42 +33,6 @@ enum Amenity {
   CHANGING_ROOMS
   FIRST_AID
   WATER_FACILITY
-}
-
-model Venue {
-  id            String   @id @default(uuid())
-  name          String
-  contactNumber String
-  city          String
-  address       String
-  latitude      Float?
-  longitude     Float?
-  openingTime   String
-  closingTime   String
-  workingDays   String[]
-  sportTypes    String[]
-  amenities     Amenity[]
-  photos        String[]
-
-  ownerId       String
-  owner         User     @relation("OwnerVenues", fields: [ownerId], references: [id])
-
-  bookings      Booking[]
-  favoritedBy   Favorite[]
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model Otp {
-  id          String   @id @default(uuid())
-  phone       String
-  otpHash     String
-  expiresAt   DateTime
-  verified    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  @@index([phone])
 }
 
 enum BookingStatus {
@@ -106,6 +60,84 @@ enum Sport {
   FOOTBALL
 }
 
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum InviteType {
+  INVITE        // captain → player
+  JOIN_REQUEST  // player → team (captain responds)
+}
+
+enum EntityType {
+  TEAM
+  TOURNAMENT
+  VENUE
+}
+
+model User {
+  id              String   @id @default(uuid())
+  phone           String   @unique
+  name            String?
+  email           String?  @unique
+  profilePicture  String?
+
+  roles           Role[]
+  memberships     Membership[]
+
+  venues          Venue[]  @relation("OwnerVenues")
+  bookings        Booking[] 
+  notifications   Notification[]
+  favorites       Favorite[]
+
+  teams           Team[]   @relation("CaptainTeams")
+  initiatedInvites TeamInvite[] @relation("InitiatedInvites")
+  receivedInvites  TeamInvite[] @relation("ReceivedInvites")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Venue {
+  id            String   @id @default(uuid())
+  name          String
+  contactNumber String
+  city          String
+  address       String
+  latitude      Float?
+  longitude     Float?
+  openingTime   String
+  closingTime   String
+  workingDays   String[]
+  sportTypes    String[]
+  amenities     Amenity[]
+  photos        String[]
+
+  // Remove ownerId and owner relation if you want to allow multiple owners/managers per venue
+  ownerId       String
+  owner         User     @relation("OwnerVenues", fields: [ownerId], references: [id])
+
+  bookings      Booking[]
+  favoritedBy   Favorite[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Otp {
+  id          String   @id @default(uuid())
+  phone       String
+  otpHash     String
+  expiresAt   DateTime
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([phone])
+}
+
 model Booking {
   id              String         @id @default(uuid())
   referenceNumber String         @unique
@@ -124,8 +156,8 @@ model Booking {
   paymentStatus   PaymentStatus  @default(PAID)
   status          BookingStatus  @default(CONFIRMED)
 
-  userId          String
-  user            User           @relation(fields: [userId], references: [id])
+  userId          String?
+  user            User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   venueId         String
   venue           Venue          @relation(fields: [venueId], references: [id])
@@ -142,7 +174,7 @@ model Booking {
 model Notification {
   id          String   @id @default(uuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id],onDelete: Cascade)
   title       String
   message     String
   isRead      Boolean  @default(false)
@@ -160,4 +192,62 @@ model Favorite {
   @@unique([userId, venueId]) // Prevents a user from favoriting the same venue twice
   @@index([userId])
   @@index([venueId])
+}
+
+model Team {
+  id            String       @id @default(uuid())
+  name          String
+  city          String
+  sport         Sport
+  primaryGround String?
+
+  captainId     String
+  captain       User         @relation("CaptainTeams", fields: [captainId], references: [id])
+
+  invites       TeamInvite[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model TeamInvite {
+  id          String       @id @default(uuid())
+  type        InviteType
+  status      InviteStatus @default(PENDING)
+
+  teamId      String
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  // who created this record (captain for INVITE, player for JOIN_REQUEST)
+  initiatorId String
+  initiator   User         @relation("InitiatedInvites", fields: [initiatorId], references: [id], onDelete: Cascade)
+
+  // who needs to respond (player for INVITE, captain for JOIN_REQUEST)
+  recipientId String
+  recipient   User         @relation("ReceivedInvites", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  expiresAt   DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([teamId])
+  @@index([initiatorId])
+  @@index([recipientId])
+}
+
+model Membership {
+  id          String      @id @default(uuid())
+
+  userId      String
+  entityId    String
+  entityType  EntityType
+  role        Role
+
+  user        User        @relation(fields: [userId], references: [id],onDelete: Cascade)
+
+  createdAt   DateTime    @default(now())
+
+  @@index([userId])
+  @@index([entityId, entityType])
+  @@unique([userId, entityId, entityType, role])
 }
