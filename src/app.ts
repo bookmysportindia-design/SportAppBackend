@@ -10,6 +10,7 @@ import venueRoutes from "./modules/venues/venue.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
 import notificationRoutes from "./modules/notifications/notification_routes.js";
 import teamRoutes from "./modules/team/team.routes.js";
+import matchRoutes from "./modules/match/match.routes.js";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api/venues", venueRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/matches", matchRoutes);
 
 app.use(errorMiddleware);
 

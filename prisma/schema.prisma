@@ -78,6 +78,28 @@ enum EntityType {
   VENUE
 }
 
+enum MatchStatus {
+  PAYMENT_PENDING
+  UNDER_REVIEW
+  SCHEDULED
+  POSTPONED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum MatchType{
+  FRIENDLY
+  PRACTICE
+  TOURNAMENT
+}
+
+enum MatchPaymentMethod {
+  TEAM_WALLET
+  SPLIT
+  PAID_BY_CAPTAIN
+}
+
 model User {
   id              String   @id @default(uuid())
   phone           String   @unique
@@ -96,6 +118,7 @@ model User {
   teams           Team[]   @relation("CaptainTeams")
   initiatedInvites TeamInvite[] @relation("InitiatedInvites")
   receivedInvites  TeamInvite[] @relation("ReceivedInvites")
+  // matches         MatchPlayer[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -162,6 +185,9 @@ model Booking {
   venueId         String
   venue           Venue          @relation(fields: [venueId], references: [id])
 
+  matchId         String?        @unique
+  match           Match?         
+
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   cancelledAt     DateTime?
@@ -170,6 +196,48 @@ model Booking {
   @@index([venueId])
   @@index([bookingDate])
 }
+
+model Match {
+  id          String      @id @default(uuid())
+  status      MatchStatus @default(PAYMENT_PENDING)
+  type        MatchType
+  matchDate   DateTime
+
+  teams         MatchTeam[]
+  paymentMethod MatchPaymentMethod
+
+  bookingId   String      @unique
+  booking     Booking     @relation(fields: [bookingId], references: [id])
+
+  // The "Squad"
+  // This links to users who are actually playing in THIS specific match
+  // squad       MatchPlayer[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model MatchTeam {
+  matchId String
+  teamId  String
+
+  match Match @relation(fields: [matchId], references: [id])
+  team  Team  @relation(fields: [teamId], references: [id])
+
+  @@id([matchId, teamId])
+}
+
+// model MatchPlayer {
+//   id      String @id @default(uuid())
+//   matchId String
+//   userId  String
+//   teamId  String // Which team they are playing for in this match
+  
+//   match   Match  @relation(fields: [matchId], references: [id])
+//   user    User   @relation(fields: [userId], references: [id])
+
+//   @@unique([matchId, userId])
+// }
 
 model Notification {
   id          String   @id @default(uuid())
@@ -205,6 +273,7 @@ model Team {
   captain       User         @relation("CaptainTeams", fields: [captainId], references: [id])
 
   invites       TeamInvite[]
+  matches       MatchTeam[]
 
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt

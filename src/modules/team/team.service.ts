@@ -263,7 +263,19 @@ export class TeamService {
     });
   }
 
-  static async getTeams() {
-    return prisma.team.findMany();
+  static async getTeams(search?: string) {
+    return prisma.team.findMany(
+      search
+        ? {
+            where: {
+              OR: [
+                { name: { contains: search, mode: "insensitive" } },
+                { city: { contains: search, mode: "insensitive" } },
+                { primaryGround: { contains: search, mode: "insensitive" } },
+              ],
+            },
+          }
+        : undefined,
+    );
   }
 }
