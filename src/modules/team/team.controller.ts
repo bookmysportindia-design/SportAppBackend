@@ -39,7 +39,11 @@ export class TeamController {
       return;
     }
     try {
-      const teams = await TeamService.getTeams();
+      const search =
+        typeof req.query.search === "string"
+          ? req.query.search.trim()
+          : undefined;
+      const teams = await TeamService.getTeams(search || undefined);
       res.json(teams);
     } catch (error) {
       next(error);
