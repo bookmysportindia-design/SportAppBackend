@@ -17,6 +17,10 @@ export class MatchService {
       const end = new Date(date);
       end.setHours(23, 59, 59, 999);
       where.matchDate = { gte: start, lte: end };
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      where.matchDate = { gte: today };
     }
 
     if (search && typeof search === "string" && search.trim().length > 0) {
@@ -44,7 +48,7 @@ export class MatchService {
               bookingDate: true,
               slot: true,
               sport: true,
-              venue: { select: { id: true, name: true } },
+              venue: { select: { id: true, name: true, address: true } },
             },
           },
           teams: { include: { team: { select: { id: true, name: true } } } },

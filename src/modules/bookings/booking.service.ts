@@ -4,16 +4,12 @@ import {
   PaymentStatus,
   Slot,
 } from "../../../prisma/generated/prisma/client.js";
-
-interface CreateBookingDto {
-  venueId: string;
-  bookingDate: string;
-  slot: Slot;
-  baseAmount: number;
-  offerCode?: string;
-  sport: "CRICKET" | "FOOTBALL";
-  playersPerTeam: number;
-}
+import {
+  AcceptBookingDto,
+  CancelBookingDto,
+  CreateBookingDto,
+  GetUserBookingsQuery,
+} from "./booking.types.js";
 
 export class BookingService {
   static generateReference(): string {
@@ -60,16 +56,21 @@ export class BookingService {
     return booking;
   }
 
-  static async getUserBookings(userId: string, date?: string) {
+  static async getUserBookings(userId: string, query: GetUserBookingsQuery) {
+    const { date } = query;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     return prisma.booking.findMany({
       where: {
         userId,
-        ...(date && {
-          bookingDate: {
-            gte: new Date(date),
-            lt: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
-          },
-        }),
+        bookingDate: date
+          ? {
+              gte: new Date(date),
+              lt: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
+            }
+          : { gte: today },
       },
       orderBy: {
         bookingDate: "asc",
@@ -80,7 +81,8 @@ export class BookingService {
     });
   }
 
-  static async cancel(userId: string, bookingId: string) {
+  static async cancel(userId: string, data: CancelBookingDto) {
+    const { bookingId } = data;
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
     });
@@ -117,7 +119,8 @@ export class BookingService {
     return bookingRequests;
   }
 
-  static async acceptBookingRequest(bookingId: string) {
+  static async acceptBookingRequest(data: AcceptBookingDto) {
+    const { bookingId } = data;
     try {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
