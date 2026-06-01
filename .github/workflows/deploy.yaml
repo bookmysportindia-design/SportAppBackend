@@ -5,13 +5,16 @@ on:
     branches:
       - main # Trigger deployment on push to the main branch
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Deploy to Linode via SSH
         uses: appleboy/ssh-action@v1.0.3
