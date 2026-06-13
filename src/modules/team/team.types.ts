@@ -26,6 +26,11 @@ export interface RespondToInviteDto {
   accept: boolean;
 }
 
+export interface RemovePlayerDto {
+  teamId: string;
+  playerId: string;
+}
+
 // Max players per team per sport (including captain)
 export const SPORT_MAX_PLAYERS: Record<Sport, number> = {
   [Sport.CRICKET]: 11,

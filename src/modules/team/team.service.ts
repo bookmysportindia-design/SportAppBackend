@@ -8,6 +8,7 @@ import { prisma } from "../../lib/prisma.js";
 import {
   AddMemberDto,
   CreateTeamDto,
+  RemovePlayerDto,
   RequestJoinDto,
   RespondToInviteDto,
   SendInviteDto,
@@ -261,6 +262,67 @@ export class TeamService {
       },
       orderBy: { createdAt: "desc" },
     });
+  }
+
+  static async getMyTeams(userId: string, search?: string) {
+    const memberships = await prisma.membership.findMany({
+      where: { userId, entityType: EntityType.TEAM },
+      select: { entityId: true },
+    });
+
+    const teamIds = memberships.map((m) => m.entityId);
+    if (teamIds.length === 0) return [];
+
+    return prisma.team.findMany({
+      where: {
+        id: { in: teamIds },
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { city: { contains: search, mode: "insensitive" } },
+            { primaryGround: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+      },
+    });
+  }
+
+  // Player voluntarily leaves a team (captain cannot leave — must delete the team)
+  static async leaveTeam(userId: string, teamId: string) {
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    if (!team) throw new Error("Team not found");
+    if (team.captainId === userId)
+      throw new Error("Captain cannot leave the team. Delete the team instead.");
+
+    const membership = await prisma.membership.findFirst({
+      where: { entityId: teamId, entityType: EntityType.TEAM, userId },
+    });
+    if (!membership) throw new Error("You are not a member of this team");
+
+    await prisma.membership.delete({ where: { id: membership.id } });
+    return { message: "You have left the team" };
+  }
+
+  // Captain removes a player from their team
+  static async removePlayer(captainId: string, data: RemovePlayerDto) {
+    const team = await prisma.team.findUnique({ where: { id: data.teamId } });
+    if (!team) throw new Error("Team not found");
+    if (team.captainId !== captainId)
+      throw new Error("Only the captain can remove players");
+    if (data.playerId === captainId)
+      throw new Error("Captain cannot remove themselves");
+
+    const membership = await prisma.membership.findFirst({
+      where: {
+        entityId: data.teamId,
+        entityType: EntityType.TEAM,
+        userId: data.playerId,
+      },
+    });
+    if (!membership) throw new Error("Player is not a member of this team");
+
+    await prisma.membership.delete({ where: { id: membership.id } });
+    return { message: "Player removed from team" };
   }
 
   static async getTeams(search?: string) {
