@@ -21,6 +21,21 @@ export class UserController {
     }
   }
 
+  // GET /users/all?search= — matches against name or phone number
+  static async getAllUsers(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const search = req.query.search as string | undefined;
+      const users = await UserService.getAll(search);
+      res.status(200).json(users);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async updateUser(
     req: Request,
     res: Response,
