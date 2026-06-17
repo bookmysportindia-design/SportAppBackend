@@ -268,6 +268,7 @@ model Team {
   city          String
   sport         Sport
   primaryGround String?
+  isRecruiting  Boolean      @default(true)
 
   captainId     String
   captain       User         @relation("CaptainTeams", fields: [captainId], references: [id])

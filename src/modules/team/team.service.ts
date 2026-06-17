@@ -3,8 +3,10 @@ import {
   InviteStatus,
   InviteType,
   Role,
+  Sport,
 } from "../../../prisma/generated/prisma/enums.js";
 import { prisma } from "../../lib/prisma.js";
+import { UserService } from "../users/user.service.js";
 import {
   AddMemberDto,
   CreateTeamDto,
@@ -12,6 +14,7 @@ import {
   RequestJoinDto,
   RespondToInviteDto,
   SendInviteDto,
+  ToggleRecruitingDto,
   SPORT_MAX_PLAYERS,
 } from "./team.types.js";
 
@@ -52,38 +55,6 @@ export class TeamService {
       });
 
       return team;
-    });
-  }
-
-  static async addMember(userId: string, data: AddMemberDto) {
-    const team = await prisma.team.findUnique({ where: { id: data.teamId } });
-    if (!team) throw new Error("Team not found");
-    if (team.captainId !== userId)
-      throw new Error("Only captain can add members");
-
-    const existing = await prisma.membership.findFirst({
-      where: {
-        entityId: data.teamId,
-        entityType: EntityType.TEAM,
-        userId: data.playerId,
-      },
-    });
-    if (existing) throw new Error("User already a member");
-
-    const count = await getTeamMemberCount(data.teamId);
-    if (count >= SPORT_MAX_PLAYERS[team.sport]) {
-      throw new Error(
-        `Team is full (max ${SPORT_MAX_PLAYERS[team.sport]} players for ${team.sport})`,
-      );
-    }
-
-    await prisma.membership.create({
-      data: {
-        entityId: team.id,
-        entityType: EntityType.TEAM,
-        userId: data.playerId,
-        role: Role.PLAYER,
-      },
     });
   }
 
@@ -292,7 +263,9 @@ export class TeamService {
     const team = await prisma.team.findUnique({ where: { id: teamId } });
     if (!team) throw new Error("Team not found");
     if (team.captainId === userId)
-      throw new Error("Captain cannot leave the team. Delete the team instead.");
+      throw new Error(
+        "Captain cannot leave the team. Delete the team instead.",
+      );
 
     const membership = await prisma.membership.findFirst({
       where: { entityId: teamId, entityType: EntityType.TEAM, userId },
@@ -325,19 +298,161 @@ export class TeamService {
     return { message: "Player removed from team" };
   }
 
-  static async getTeams(search?: string) {
-    return prisma.team.findMany(
-      search
-        ? {
-            where: {
-              OR: [
-                { name: { contains: search, mode: "insensitive" } },
-                { city: { contains: search, mode: "insensitive" } },
-                { primaryGround: { contains: search, mode: "insensitive" } },
-              ],
-            },
-          }
-        : undefined,
+  static async searchPlayers(
+    callerId: string,
+    teamId: string,
+    search?: string,
+  ) {
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    if (!team) throw new Error("Team not found");
+    if (team.captainId !== callerId)
+      throw new Error("Only captain can search players for invite");
+
+    const users = await UserService.getAll(
+      search ? { name: search, phone: search } : {},
+      callerId,
     );
+
+    const [members, pendingInvites] = await Promise.all([
+      prisma.membership.findMany({
+        where: { entityId: teamId, entityType: EntityType.TEAM },
+        select: { userId: true },
+      }),
+      prisma.teamInvite.findMany({
+        where: { teamId, status: InviteStatus.PENDING },
+        select: { recipientId: true, initiatorId: true },
+      }),
+    ]);
+
+    const memberIds = new Set(members.map((m) => m.userId));
+    const pendingInviteUserIds = new Set(
+      pendingInvites.flatMap((i) => [i.recipientId, i.initiatorId]),
+    );
+
+    return users.map((user) => ({
+      ...user,
+      isMember: memberIds.has(user.id),
+      hasPendingInvite: pendingInviteUserIds.has(user.id),
+    }));
+  }
+
+  static async discoverTeams(userId: string, search?: string) {
+    const myMemberships = await prisma.membership.findMany({
+      where: { userId, entityType: EntityType.TEAM },
+      select: { entityId: true },
+    });
+    const myTeamIds = myMemberships.map((m) => m.entityId);
+
+    const teams = await prisma.team.findMany({
+      where: {
+        ...(myTeamIds.length > 0 && { id: { notIn: myTeamIds } }),
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { city: { contains: search, mode: "insensitive" } },
+            { primaryGround: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+      },
+      include: {
+        captain: { select: { id: true, name: true } },
+      },
+    });
+
+    const teamIds = teams.map((t) => t.id);
+    if (teamIds.length === 0) return [];
+
+    const [memberCounts, pendingRequests] = await Promise.all([
+      prisma.membership.groupBy({
+        by: ["entityId"],
+        where: { entityType: EntityType.TEAM, entityId: { in: teamIds } },
+        _count: true,
+      }),
+      prisma.teamInvite.findMany({
+        where: {
+          initiatorId: userId,
+          type: InviteType.JOIN_REQUEST,
+          status: InviteStatus.PENDING,
+          teamId: { in: teamIds },
+        },
+        select: { teamId: true },
+      }),
+    ]);
+
+    const countMap = new Map(memberCounts.map((mc) => [mc.entityId, mc._count]));
+    const pendingTeamIds = new Set(pendingRequests.map((r) => r.teamId));
+
+    return teams.map((team) => {
+      const memberCount = countMap.get(team.id) ?? 0;
+      return {
+        id: team.id,
+        name: team.name,
+        city: team.city,
+        sport: team.sport,
+        primaryGround: team.primaryGround,
+        captain: team.captain,
+        memberCount,
+        isRecruiting: team.isRecruiting,
+        isFull: memberCount >= SPORT_MAX_PLAYERS[team.sport],
+        joinRequestStatus: pendingTeamIds.has(team.id) ? "PENDING" : null,
+      };
+    });
+  }
+
+  static async opponentTeams(userId: string, sport: string, search?: string) {
+    const myMemberships = await prisma.membership.findMany({
+      where: { userId, entityType: EntityType.TEAM },
+      select: { entityId: true },
+    });
+    const myTeamIds = myMemberships.map((m) => m.entityId);
+
+    const teams = await prisma.team.findMany({
+      where: {
+        sport: sport as Sport,
+        ...(myTeamIds.length > 0 && { id: { notIn: myTeamIds } }),
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { city: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+      },
+    });
+
+    const teamIds = teams.map((t) => t.id);
+    if (teamIds.length === 0) return [];
+
+    const memberCounts = await prisma.membership.groupBy({
+      by: ["entityId"],
+      where: { entityType: EntityType.TEAM, entityId: { in: teamIds } },
+      _count: true,
+    });
+    const countMap = new Map(memberCounts.map((mc) => [mc.entityId, mc._count]));
+
+    return teams.map((team) => ({
+      id: team.id,
+      name: team.name,
+      city: team.city,
+      sport: team.sport,
+      memberCount: countMap.get(team.id) ?? 0,
+      stats: {
+        skillLevel: "Intermediate",
+        matchesPlayed: 0,
+        winRate: 0,
+        availability: "Available",
+      },
+    }));
+  }
+
+  static async toggleRecruiting(userId: string, data: ToggleRecruitingDto) {
+    const team = await prisma.team.findUnique({ where: { id: data.teamId } });
+    if (!team) throw new Error("Team not found");
+    if (team.captainId !== userId)
+      throw new Error("Only captain can toggle recruiting status");
+
+    return prisma.team.update({
+      where: { id: data.teamId },
+      data: { isRecruiting: data.isRecruiting },
+    });
   }
 }

@@ -31,6 +31,11 @@ export interface RemovePlayerDto {
   playerId: string;
 }
 
+export interface ToggleRecruitingDto {
+  teamId: string;
+  isRecruiting: boolean;
+}
+
 // Max players per team per sport (including captain)
 export const SPORT_MAX_PLAYERS: Record<Sport, number> = {
   [Sport.CRICKET]: 11,

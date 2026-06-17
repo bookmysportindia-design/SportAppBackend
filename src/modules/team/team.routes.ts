@@ -15,8 +15,14 @@ router.post("/update-team", authMiddleware, (req, res) => {
 // Captain directly adds a player to the team (no invite flow)
 router.post("/add-member", authMiddleware, TeamController.addMember);
 
-// Browse all teams (public, supports ?search=)
-router.get("/get-teams", authMiddleware, TeamController.getTeams);
+// Discover teams to join (excludes user's own teams, includes recruiting/capacity info)
+router.get("/discover-teams", authMiddleware, TeamController.discoverTeams);
+
+// Browse opponent teams for match booking (filtered by sport, excludes user's teams)
+router.get("/opponent-teams", authMiddleware, TeamController.opponentTeams);
+
+// Captain toggles whether the team is actively recruiting
+router.post("/toggle-recruiting", authMiddleware, TeamController.toggleRecruiting);
 
 // Get teams the authenticated user belongs to (supports ?search=)
 router.get("/my-teams", authMiddleware, TeamController.getMyTeams);
@@ -38,6 +44,9 @@ router.post("/remove-player", authMiddleware, TeamController.removePlayer);
 
 // Get all pending invites/join-requests for the authenticated user
 router.get("/my-invites", authMiddleware, TeamController.getMyInvites);
+
+// Captain searches users to invite — flags existing members & pending invites
+router.get("/:teamId/search-players", authMiddleware, TeamController.searchPlayers);
 
 // Captain views all invites and join-requests for their team
 router.get("/:teamId/invites", authMiddleware, TeamController.getTeamInvites);
