@@ -28,8 +28,9 @@ export class UserController {
     next: NextFunction,
   ): Promise<void> {
     try {
+      const callerId = req.user?.userId;
       const search = req.query.search as string | undefined;
-      const users = await UserService.getAll(search);
+      const users = await UserService.getAll(search ? { name: search, phone: search } : {}, callerId);
       res.status(200).json(users);
     } catch (error) {
       next(error);

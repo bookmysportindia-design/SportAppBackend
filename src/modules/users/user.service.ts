@@ -22,16 +22,15 @@ export class UserService {
   }
 
   // Returns all users; both filters are optional and can be combined
-  static async getAll(filters: { name?: string; phone?: string }) {
+  static async getAll(filters: { name?: string; phone?: string }, excludeId?: string) {
+    const conditions = [
+      ...(filters.name ? [{ name: { contains: filters.name, mode: "insensitive" as const } }] : []),
+      ...(filters.phone ? [{ phone: { contains: filters.phone } }] : []),
+    ];
     return prisma.user.findMany({
       where: {
-        // name is case-insensitive partial match; phone is exact partial match (digits are case-irrelevant)
-        ...(filters.name && {
-          name: { contains: filters.name, mode: "insensitive" },
-        }),
-        ...(filters.phone && {
-          phone: { contains: filters.phone },
-        }),
+        ...(excludeId && { id: { not: excludeId } }),
+        ...(conditions.length && { OR: conditions }),
       },
       select: {
         id: true,
