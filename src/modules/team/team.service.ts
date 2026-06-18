@@ -399,7 +399,7 @@ export class TeamService {
     });
   }
 
-  static async opponentTeams(userId: string, sport: string, search?: string) {
+  static async opponentTeams(userId: string, sport?: string, search?: string) {
     const myMemberships = await prisma.membership.findMany({
       where: { userId, entityType: EntityType.TEAM },
       select: { entityId: true },

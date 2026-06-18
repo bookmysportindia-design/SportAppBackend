@@ -21,21 +21,6 @@ export class TeamController {
     }
   }
 
-  static async addMember(req: Request, res: Response, next: NextFunction) {
-    const userId = req.user?.userId;
-    if (!userId) {
-      res.status(401).json({ message: "Unauthorized" });
-      return;
-    }
-    const data = req.body;
-    try {
-      await TeamService.addMember(userId, data);
-      res.json({ message: "Member added" });
-    } catch (error) {
-      next(error);
-    }
-  }
-
   static async discoverTeams(req: Request, res: Response, next: NextFunction) {
     const userId = req.user?.userId;
     if (!userId) {

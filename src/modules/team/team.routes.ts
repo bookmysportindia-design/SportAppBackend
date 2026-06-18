@@ -12,9 +12,6 @@ router.post("/update-team", authMiddleware, (req, res) => {
   res.send("Update team");
 });
 
-// Captain directly adds a player to the team (no invite flow)
-router.post("/add-member", authMiddleware, TeamController.addMember);
-
 // Discover teams to join (excludes user's own teams, includes recruiting/capacity info)
 router.get("/discover-teams", authMiddleware, TeamController.discoverTeams);
 
