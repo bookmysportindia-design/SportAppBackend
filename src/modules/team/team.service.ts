@@ -8,7 +8,6 @@ import {
 import { prisma } from "../../lib/prisma.js";
 import { UserService } from "../users/user.service.js";
 import {
-  AddMemberDto,
   CreateTeamDto,
   RemovePlayerDto,
   RequestJoinDto,

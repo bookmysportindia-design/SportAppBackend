@@ -7,11 +7,6 @@ export interface CreateTeamDto {
   primaryGround: string | null;
 }
 
-export interface AddMemberDto {
-  teamId: string;
-  playerId: string;
-}
-
 export interface SendInviteDto {
   teamId: string;
   playerId: string; // player to invite
