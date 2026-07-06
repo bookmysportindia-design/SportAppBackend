@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { TeamService } from "../team/team.service.js";
 import { UserService } from "./user.service.js";
 
 export class UserController {
@@ -30,8 +31,30 @@ export class UserController {
     try {
       const callerId = req.user?.userId;
       const search = req.query.search as string | undefined;
-      const users = await UserService.getAll(search ? { name: search, phone: search } : {}, callerId);
+      const users = await UserService.getAll(
+        search ? { name: search, phone: search } : {},
+        callerId,
+      );
       res.status(200).json(users);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getMyInvites(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const invites = await TeamService.getMyInvites(userId);
+      res.status(200).json(invites);
     } catch (error) {
       next(error);
     }

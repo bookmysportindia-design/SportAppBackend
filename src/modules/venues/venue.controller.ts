@@ -84,7 +84,11 @@ export class VenueController {
     }
   }
 
-  static async getFavoriteVenues(req: Request, res: Response, next: NextFunction) {
+  static async getFavoriteVenues(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
     try {
       const userId = req.user?.userId;
       if (!userId) {
@@ -93,6 +97,59 @@ export class VenueController {
       }
       const venues = await VenueService.getFavoriteVenues(userId);
       res.status(200).json(venues);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getPitchSlots(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const venueId = req.params.venueId as string;
+      const pitchId = req.params.pitchId as string;
+      const date =
+        typeof req.query.date === "string" ? req.query.date : undefined;
+      const view =
+        typeof req.query.view === "string" ? req.query.view : "day";
+
+      if (!venueId || !pitchId || !date) {
+        res.status(400).json({
+          message: "venueId, pitchId and date query parameter are required",
+        });
+        return;
+      }
+
+      if (view !== "day" && view !== "week" && view !== "month") {
+        res
+          .status(400)
+          .json({ message: "view must be one of day, week, month" });
+        return;
+      }
+
+      const result = await VenueService.getPitchSlots(
+        venueId,
+        pitchId,
+        date,
+        view,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      const venue = await VenueService.getById(id);
+      if (!venue) {
+        res.status(404).json({ message: "Venue not found" });
+        return;
+      }
+      res.status(200).json(venue);
     } catch (error) {
       next(error);
     }

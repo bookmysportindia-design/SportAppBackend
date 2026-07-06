@@ -9,9 +9,16 @@ const router = Router();
 // /all must come before / so Express doesn't treat "all" as a path param
 // GET /users/all?search= — fetch all users, optionally filtered by name or phone
 router.get("/all", authMiddleware, UserController.getAllUsers);
+// GET /users/my-invites — fetch the authenticated user's pending invitations
+router.get("/my-invites", authMiddleware, UserController.getMyInvites);
 // GET /users — fetch the currently authenticated user's profile
 router.get("/", authMiddleware, UserController.getUser);
 // PUT /users — update the currently authenticated user's profile
-router.put("/", authMiddleware, validate(updateUserSchema), UserController.updateUser);
+router.put(
+  "/",
+  authMiddleware,
+  validate(updateUserSchema),
+  UserController.updateUser,
+);
 
 export default router;

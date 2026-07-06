@@ -1,13 +1,29 @@
 import { z } from "zod";
-import { Slot } from "../../../prisma/generated/prisma/enums.js";
 
-export const createBookingSchema = z.object({
-  venueId: z.string().uuid(),
+const timeFormat = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
+export const bookingPreviewSchema = z.object({
+  venueId: z.uuid(),
   bookingDate: z.string().datetime(),
-  slot: z.enum(Slot),
+  startTime: timeFormat,
+  endTime: timeFormat,
   sport: z.enum(["CRICKET", "FOOTBALL"]),
   playersPerTeam: z.number().int().min(1).max(11),
-  offerCode: z.string().optional(),
+  pitchId: z.uuid().optional(),
+  tierId: z.uuid().optional(),
+  matchType: z.enum(["FRIENDLY", "PRACTICE", "TOURNAMENT"]).optional(),
+});
+
+export const confirmBookingSchema = z.object({
+  venueId: z.uuid(),
+  bookingDate: z.string().datetime(),
+  startTime: timeFormat,
+  endTime: timeFormat,
+  sport: z.enum(["CRICKET", "FOOTBALL"]),
+  playersPerTeam: z.number().int().min(1).max(11),
+  pitchId: z.uuid().optional(),
+  tierId: z.uuid().optional(),
+  matchType: z.enum(["FRIENDLY", "PRACTICE", "TOURNAMENT"]).optional(),
 });
 
 export const getUserBookingsQuerySchema = z.object({
@@ -15,9 +31,9 @@ export const getUserBookingsQuerySchema = z.object({
 });
 
 export const cancelBookingSchema = z.object({
-  bookingId: z.string().uuid(),
+  bookingId: z.uuid(),
 });
 
 export const acceptBookingSchema = z.object({
-  bookingId: z.string().uuid(),
+  bookingId: z.uuid(),
 });

@@ -36,7 +36,11 @@ const envSchema = z.object({
     .string()
     .min(1, "PHONEPE_CLIENT_VERSION is required"),
 
-  PHONEPE_CLIENT_SECRET: z.string().min(1, "PHONEPE_CLIENT_SECRET is required")
+  PHONEPE_CLIENT_SECRET: z.string().min(1, "PHONEPE_CLIENT_SECRET is required"),
+
+  PAYU_KEY: z.string().min(1, "PAYU_KEY is required"),
+
+  PAYU_SALT: z.string().min(1, "PAYU_SALT is required"),
 });
 
 const parsed = envSchema.safeParse(process.env);

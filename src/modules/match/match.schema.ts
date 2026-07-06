@@ -36,3 +36,19 @@ export const createMatchSchema = z.object({
   bookingId: z.uuid("Invalid booking ID"),
   paymentMethod: z.enum(["TEAM_WALLET", "SPLIT", "PAID_BY_CAPTAIN"]),
 });
+
+export const sendMatchInviteSchema = z.object({
+  matchId: z.uuid("Invalid match ID"),
+  teamId: z.uuid("Invalid team ID"),
+  playerId: z.uuid("Invalid player ID"),
+});
+
+export const requestJoinMatchSchema = z.object({
+  matchId: z.uuid("Invalid match ID"),
+  teamId: z.uuid("Invalid team ID"),
+});
+
+export const respondToMatchInviteSchema = z.object({
+  inviteId: z.uuid("Invalid invite ID"),
+  accept: z.boolean(),
+});

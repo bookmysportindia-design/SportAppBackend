@@ -1,6 +1,12 @@
 import axios from "axios";
+import crypto from "crypto";
 import { env } from "../../config/env.js";
-import { createOrderDto, OrderTokenResponse } from "./payment.types.js";
+import {
+  createOrderDto,
+  OrderTokenResponse,
+  PayUInitiateDto,
+  PayUInitiateResponse,
+} from "./payment.types.js";
 
 export class PaymentService {
   private static accessToken: string | null = null;
@@ -119,6 +125,35 @@ export class PaymentService {
     }
   }
 
+  static initiatePayU(data: PayUInitiateDto): PayUInitiateResponse {
+    console.log("Initiating PayU Payment with data:", data);
+    const suffix = Math.random().toString(36).slice(2, 6);
+    const txnId = `txn${Date.now()}${suffix}`;
+    return {
+      txnId,
+      key: env.PAYU_KEY,
+      amount: data.amount,
+      ...(data.productinfo !== undefined && { productinfo: data.productinfo }),
+      ...(data.firstname !== undefined && { firstname: data.firstname }),
+      ...(data.email !== undefined && { email: data.email }),
+      ...(data.phone !== undefined && { phone: data.phone }),
+      ...(data.udf1 !== undefined && { udf1: data.udf1 }),
+      ...(data.udf2 !== undefined && { udf2: data.udf2 }),
+      ...(data.udf3 !== undefined && { udf3: data.udf3 }),
+      ...(data.udf4 !== undefined && { udf4: data.udf4 }),
+      ...(data.udf5 !== undefined && { udf5: data.udf5 }),
+    };
+  }
+
+  static computePayUHash(hashString: string): string {
+    const hash = crypto
+      .createHash("sha512")
+      .update(`${hashString}${env.PAYU_SALT}`)
+      .digest("hex");
+    console.log("Computed PayU Hash:", hash);
+    return hash;
+  }
+
   static async getPaymentStatus(orderId: string) {
     const accessToken = await PaymentService.getPhonePeAccessToken();
     console.log(accessToken);
@@ -132,7 +167,7 @@ export class PaymentService {
       const response = await axios.get(statusUrl, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `O-Bearer ${accessToken}`,
+          Authorization: `O-Bearer ${accessToken}`,
         },
       });
       console.log("PhonePe Payment Status Response:", response.data);

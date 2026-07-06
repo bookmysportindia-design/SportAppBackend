@@ -1,14 +1,29 @@
 import type { Request, Response, NextFunction } from "express";
 import { BookingService } from "./booking.service.js";
 import {
-  createBookingSchema,
+  bookingPreviewSchema,
+  confirmBookingSchema,
   getUserBookingsQuerySchema,
   cancelBookingSchema,
   acceptBookingSchema,
 } from "./booking.schema.js";
 
 export class BookingController {
-  static async create(
+  static async preview(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const data = bookingPreviewSchema.parse(req.body);
+      const result = await BookingService.preview(data);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async confirm(
     req: Request,
     res: Response,
     next: NextFunction,
@@ -20,8 +35,8 @@ export class BookingController {
         return;
       }
 
-      const data = createBookingSchema.parse(req.body);
-      const booking = await BookingService.create(userId, data);
+      const data = confirmBookingSchema.parse(req.body);
+      const booking = await BookingService.confirm(userId, data);
       res.status(201).json(booking);
     } catch (error) {
       next(error);

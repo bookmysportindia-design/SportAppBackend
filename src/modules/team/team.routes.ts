@@ -19,7 +19,11 @@ router.get("/discover-teams", authMiddleware, TeamController.discoverTeams);
 router.get("/opponent-teams", authMiddleware, TeamController.opponentTeams);
 
 // Captain toggles whether the team is actively recruiting
-router.post("/toggle-recruiting", authMiddleware, TeamController.toggleRecruiting);
+router.post(
+  "/toggle-recruiting",
+  authMiddleware,
+  TeamController.toggleRecruiting,
+);
 
 // Get teams the authenticated user belongs to (supports ?search=)
 router.get("/my-teams", authMiddleware, TeamController.getMyTeams);
@@ -39,11 +43,12 @@ router.post("/:teamId/leave", authMiddleware, TeamController.leaveTeam);
 // Captain removes a player from the team — body: { teamId, playerId }
 router.post("/remove-player", authMiddleware, TeamController.removePlayer);
 
-// Get all pending invites/join-requests for the authenticated user
-router.get("/my-invites", authMiddleware, TeamController.getMyInvites);
-
 // Captain searches users to invite — flags existing members & pending invites
-router.get("/:teamId/search-players", authMiddleware, TeamController.searchPlayers);
+router.get(
+  "/:teamId/search-players",
+  authMiddleware,
+  TeamController.searchPlayers,
+);
 
 // Captain views all invites and join-requests for their team
 router.get("/:teamId/invites", authMiddleware, TeamController.getTeamInvites);

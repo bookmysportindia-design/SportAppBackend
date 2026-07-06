@@ -17,14 +17,20 @@ export class UserService {
         email: true,
         profilePicture: true,
         createdAt: true,
+        venues: true,
       },
     });
   }
 
   // Returns all users; both filters are optional and can be combined
-  static async getAll(filters: { name?: string; phone?: string }, excludeId?: string) {
+  static async getAll(
+    filters: { name?: string; phone?: string },
+    excludeId?: string,
+  ) {
     const conditions = [
-      ...(filters.name ? [{ name: { contains: filters.name, mode: "insensitive" as const } }] : []),
+      ...(filters.name
+        ? [{ name: { contains: filters.name, mode: "insensitive" as const } }]
+        : []),
       ...(filters.phone ? [{ phone: { contains: filters.phone } }] : []),
     ];
     return prisma.user.findMany({

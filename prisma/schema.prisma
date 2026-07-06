@@ -46,18 +46,51 @@ enum PaymentStatus {
   REFUNDED
 }
 
-enum Slot {
-  PRE_DAWN
-  SLOT1
-  SLOT2
-  SLOT3
-  DNSLOT
-  MIDNIGHT
-}
-
 enum Sport {
   CRICKET
   FOOTBALL
+}
+
+enum GroundType {
+  TURF_WICKET
+  MATTING_WICKET
+  BOX_CRICKET
+  INDOOR_NETS
+}
+
+enum SlotDuration {
+  ONE_HOUR
+  ONE_AND_HALF_HOURS
+  TWO_HOURS
+  THREE_HOURS
+}
+
+enum PitchType {
+  MATCH_PITCH
+  PRACTICE_NETS
+  BOX_CRICKET_AREA
+}
+
+enum SurfaceType {
+  TURF
+  MATTING
+  ASTRO_TURF
+  CEMENT
+}
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+enum DiscountType {
+  FLAT
+  PERCENTAGE
 }
 
 enum InviteStatus {
@@ -88,7 +121,7 @@ enum MatchStatus {
   CANCELLED
 }
 
-enum MatchType{
+enum MatchType {
   FRIENDLY
   PRACTICE
   TOURNAMENT
@@ -118,30 +151,45 @@ model User {
   teams           Team[]   @relation("CaptainTeams")
   initiatedInvites TeamInvite[] @relation("InitiatedInvites")
   receivedInvites  TeamInvite[] @relation("ReceivedInvites")
-  // matches         MatchPlayer[]
+
+  initiatedMatchInvites MatchInvite[] @relation("InitiatedMatchInvites")
+  receivedMatchInvites  MatchInvite[] @relation("ReceivedMatchInvites")
+  matchSquads           MatchPlayer[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
 
 model Venue {
-  id            String   @id @default(uuid())
+  id            String        @id @default(uuid())
   name          String
+  groundType    GroundType
   contactNumber String
   city          String
+  state         String
   address       String
+  landmark      String?
+  description   String?
   latitude      Float?
   longitude     Float?
   openingTime   String
   closingTime   String
+  slotDuration  SlotDuration  @default(ONE_HOUR)
   workingDays   String[]
   sportTypes    String[]
   amenities     Amenity[]
   photos        String[]
 
-  // Remove ownerId and owner relation if you want to allow multiple owners/managers per venue
   ownerId       String
   owner         User     @relation("OwnerVenues", fields: [ownerId], references: [id])
+
+  pitches          Pitch[]
+  bankDetails      VenueBankDetails?
+  documents        VenueDocument[]  // optional — venue can exist without documents
+  dayPricings      DayPricing[]
+  timeSlotPricings TimeSlotPricing[]
+  slotTiers        SlotTier[]
+  discountConfigs  DiscountConfig[]
 
   bookings      Booking[]
   favoritedBy   Favorite[]
@@ -165,7 +213,8 @@ model Booking {
   id              String         @id @default(uuid())
   referenceNumber String         @unique
   bookingDate     DateTime
-  slot            Slot
+  startTime       String
+  endTime         String
   sport           Sport
   playersPerTeam  Int
 
@@ -185,8 +234,11 @@ model Booking {
   venueId         String
   venue           Venue          @relation(fields: [venueId], references: [id])
 
+  pitchId         String?
+  pitch           Pitch?         @relation(fields: [pitchId], references: [id], onDelete: SetNull)
+
   matchId         String?        @unique
-  match           Match?         
+  match           Match?
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -195,6 +247,7 @@ model Booking {
   @@index([userId])
   @@index([venueId])
   @@index([bookingDate])
+  @@index([pitchId])
 }
 
 model Match {
@@ -209,9 +262,8 @@ model Match {
   bookingId   String      @unique
   booking     Booking     @relation(fields: [bookingId], references: [id])
 
-  // The "Squad"
-  // This links to users who are actually playing in THIS specific match
-  // squad       MatchPlayer[]
+  squad       MatchPlayer[]
+  invites     MatchInvite[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -227,17 +279,23 @@ model MatchTeam {
   @@id([matchId, teamId])
 }
 
-// model MatchPlayer {
-//   id      String @id @default(uuid())
-//   matchId String
-//   userId  String
-//   teamId  String // Which team they are playing for in this match
-  
-//   match   Match  @relation(fields: [matchId], references: [id])
-//   user    User   @relation(fields: [userId], references: [id])
+model MatchPlayer {
+  id      String @id @default(uuid())
+  matchId String
+  userId  String
+  teamId  String
 
-//   @@unique([matchId, userId])
-// }
+  match   Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team    Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([matchId, userId])
+  @@index([matchId])
+  @@index([userId])
+  @@index([teamId])
+}
 
 model Notification {
   id          String   @id @default(uuid())
@@ -275,6 +333,8 @@ model Team {
 
   invites       TeamInvite[]
   matches       MatchTeam[]
+  matchPlayers  MatchPlayer[]
+  matchInvites  MatchInvite[]
 
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -305,6 +365,33 @@ model TeamInvite {
   @@index([recipientId])
 }
 
+model MatchInvite {
+  id          String       @id @default(uuid())
+  type        InviteType
+  status      InviteStatus @default(PENDING)
+
+  matchId     String
+  match       Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  teamId      String
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  initiatorId String
+  initiator   User         @relation("InitiatedMatchInvites", fields: [initiatorId], references: [id], onDelete: Cascade)
+
+  recipientId String
+  recipient   User         @relation("ReceivedMatchInvites", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  expiresAt   DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([matchId])
+  @@index([teamId])
+  @@index([initiatorId])
+  @@index([recipientId])
+}
+
 model Membership {
   id          String      @id @default(uuid())
 
@@ -320,4 +407,103 @@ model Membership {
   @@index([userId])
   @@index([entityId, entityType])
   @@unique([userId, entityId, entityType, role])
+}
+
+// ─── Venue Sub-models ───
+
+model Pitch {
+  id          String      @id @default(uuid())
+  name        String?
+  pitchType   PitchType
+  surfaceType SurfaceType
+  boundary    Int?
+
+  venueId     String
+  venue       Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  tierId      String?
+  tier        SlotTier?   @relation(fields: [tierId], references: [id], onDelete: SetNull)
+
+  bookings    Booking[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([venueId])
+}
+
+model VenueBankDetails {
+  id                String @id @default(uuid())
+  accountNumber     String
+  accountHolderName String
+  ifscCode          String
+
+  venueId           String @unique
+  venue             Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
+}
+
+model VenueDocument {
+  id        String   @id @default(uuid())
+  type      String
+  url       String
+
+  venueId   String
+  venue     Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([venueId])
+}
+
+// ─── Pricing Models ───
+
+model DayPricing {
+  id        String    @id @default(uuid())
+  day       DayOfWeek
+  basePrice Int
+  isEnabled Boolean   @default(true)
+
+  venueId   String
+  venue     Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@unique([venueId, day])
+}
+
+model TimeSlotPricing {
+  id         String @id @default(uuid())
+  name       String
+  startTime  String
+  endTime    String
+  multiplier Float
+
+  venueId    String
+  venue      Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@index([venueId])
+}
+
+model SlotTier {
+  id          String  @id @default(uuid())
+  name        String
+  multiplier  Float
+  description String?
+
+  venueId     String
+  venue       Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  pitches     Pitch[]
+
+  @@index([venueId])
+}
+
+model DiscountConfig {
+  id           String       @id @default(uuid())
+  name         String
+  bookingType  MatchType
+  discountType DiscountType
+  value        Float
+
+  venueId      String
+  venue        Venue        @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@index([venueId])
 }

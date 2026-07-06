@@ -102,6 +102,9 @@ export class AuthService {
   static async getUserInfo(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        venues: true,
+      },
     });
     return user;
   }
