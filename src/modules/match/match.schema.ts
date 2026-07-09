@@ -1,7 +1,10 @@
 import z from "zod";
 
+const emptyToUndefined = (val: unknown) =>
+  val === "null" || val === "undefined" || val === "" ? undefined : val;
+
 export const getMatchesQuerySchema = z.object({
-  date: z.iso.date().optional(),
+  date: z.preprocess(emptyToUndefined, z.iso.date().optional()),
   search: z.string().min(1).optional(),
   status: z
     .enum([

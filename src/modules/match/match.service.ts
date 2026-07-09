@@ -290,7 +290,11 @@ export class MatchService {
 
   static async getMyMatchInvites(userId: string) {
     return prisma.matchInvite.findMany({
-      where: { recipientId: userId, status: InviteStatus.PENDING },
+      where: {
+        recipientId: userId,
+        status: InviteStatus.PENDING,
+        expiresAt: { gt: new Date() },
+      },
       include: {
         match: { select: { id: true, matchDate: true, type: true, status: true } },
         team: { select: { id: true, name: true, sport: true } },
@@ -307,7 +311,7 @@ export class MatchService {
       throw new Error("Only captain can view match invites");
 
     return prisma.matchInvite.findMany({
-      where: { matchId, teamId },
+      where: { matchId, teamId, expiresAt: { gt: new Date() } },
       include: {
         initiator: { select: { id: true, name: true, phone: true } },
         recipient: { select: { id: true, name: true, phone: true } },
